@@ -15,6 +15,17 @@ if ($conn->connect_error) {
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Upload the portrait image
+    $portraitName = $_FILES['portrait']['name'];
+    $portraitTmpName = $_FILES['portrait']['tmp_name'];
+    $portraitError = $_FILES['portrait']['error'];
+
+    if ($portraitError === UPLOAD_ERR_OK) {
+        $portraitDestination = 'path/to/portraits/' . $portraitName;
+        move_uploaded_file($portraitTmpName, $portraitDestination);
+    }
+
+    // Insert CV data into the database
     $fullName = $_POST['full_name'];
     $dob = $_POST['dob'];
     $placeOfBirth = $_POST['place_of_birth'];
@@ -29,31 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $summary = $_POST['summary'];
     $skills = $_POST['skills'];
 
-    // Insert CV data into the database
-    $query = "INSERT INTO cv_data (full_name, dob, place_of_birth, location, email, phone_number, last_school, last_school_year, last_school_graduated, summary, skills) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $query = "INSERT INTO cv_data (full_name, dob, place_of_birth, location, email, phone_number, last_school, last_school_year, last_school_graduated, summary, skills, portrait) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("sssssssssss", $fullName, $dob, $placeOfBirth, $location, $email, $phoneNumber, $lastSchool, $lastSchoolYear, $lastSchoolGraduated, $summary, $skills);
+    $stmt->bind_param("ssssssssssss", $fullName, $dob, $placeOfBirth, $location, $email, $phoneNumber, $lastSchool, $lastSchoolYear, $lastSchoolGraduated, $summary, $skills, $portraitName);
     $stmt->execute();
-    $cvDataId = $stmt->insert_id; // Get the inserted CV data ID
-
-    // Insert achievements into the database
-    if (!empty($achievements)) {
-        $achievementsCount = count($achievements);
-        $achievementYearsCount = count($achievementYears);
-        $count = min($achievementsCount, $achievementYearsCount);
-
-        for ($i = 0; $i < $count; $i++) {
-            $achievement = $achievements[$i];
-            $achievementYear = $achievementYears[$i];
-
-            $query = "INSERT INTO achievements (cv_data_id, achievement, year) VALUES (?, ?, ?)";
-            $stmt = $conn->prepare($query);
-            $stmt->bind_param("iss", $cvDataId, $achievement, $achievementYear);
-            $stmt->execute();
-        }
-    }
-
+    
     // Redirect to a success page or perform other actions
     header("Location: create_success.php");
     exit();
@@ -71,7 +63,10 @@ $conn->close();
 <body>
     <h1>Input your data to make your CV</h1>
     
-    <form method="post" action="create.php">
+    <form method="post" action="create.php" enctype="multipart/form-data">
+        <label for="portrait">Upload Portrait:</label>
+        <input type="file" id="portrait" name="portrait" accept="image/jpeg, image/png" maxlength="5242880" required>
+
         <label for="full_name">Full Name:</label>
         <input type="text" id="full_name" name="full_name" required><br><br>
         
@@ -141,4 +136,3 @@ $conn->close();
     </script>
 </body>
 </html>
-

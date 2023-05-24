@@ -30,6 +30,7 @@ if ($result->num_rows > 0) {
     $lastSchoolGraduated = $row['last_school_graduated'];
     $summary = $row['summary'];
     $skills = $row['skills'];
+    $portrait = $row['portrait'];
     // Retrieve the achievements from the database
     $achievementsQuery = "SELECT achievement, year FROM achievements WHERE cv_data_id = " . $row['id'];
     $achievementsResult = $conn->query($achievementsQuery);
@@ -66,6 +67,9 @@ $conn->close();
         .cv-section ul li {
             list-style-type: disc;
         }
+        .portrait {
+            max-width: 200px;
+        }
     </style>
 </head>
 <body>
@@ -88,7 +92,7 @@ $conn->close();
     
     <div class="cv-section">
         <h2>Achievements & Certifications</h2>
-          <ul>
+        <ul>
             <?php foreach ($achievements as $achievement) : ?>
                 <li><?php echo $achievement['achievement']; ?> (<?php echo $achievement['year']; ?>)</li>
             <?php endforeach; ?>
@@ -104,6 +108,11 @@ $conn->close();
         <h2>Skills</h2>
         <p><?php echo $skills; ?></p>
     </div>
+    
+    <div class="cv-section">
+        <h2>Portrait</h2>
+        <img class="portrait" src="<?php echo $portrait; ?>" alt="Portrait">
+    </div>
 
     <form method="post" action="save_cv.php">
         <input type="submit" name="save" value="Save">
@@ -114,4 +123,3 @@ $conn->close();
     </form>
 </body>
 </html>
-
